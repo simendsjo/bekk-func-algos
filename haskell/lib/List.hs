@@ -10,7 +10,8 @@ import TestUtil ( quickcheckWithLabel )
 -- #Rev 1
 --skriv en funksjon som reverserer en liste ved å ++ elementer bakerst
 reverse :: [a] -> [a]
-reverse = error "reverse todo"
+reverse [] = []
+reverse (x:xs) = reverse xs ++ [x]
 
 -- #Rev 2
 -- Hva er suboptimalt med løsningen over?
@@ -22,7 +23,11 @@ reverse = error "reverse todo"
 -- Skriv reverse på nytt, men en mer optimal versjon
 -- Hint : lag enda en funksjon (gjerne internt i reverse')
 reverse' :: [a] -> [a]
-reverse' = error "reverse' todo"
+reverse' xs =
+  go xs []
+  where
+    go [] acc = acc
+    go (x:xs) acc = go xs (x:acc)
 
 ---------
 
