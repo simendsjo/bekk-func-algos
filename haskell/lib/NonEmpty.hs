@@ -15,7 +15,16 @@ data NonEmpty a = a :| [a] deriving (Show,Eq)
 -- Ex
 -- prependList [1,2,3] (4:|[5]) = 1:|[2,3,4,5]
 prependList :: [a] -> NonEmpty a -> NonEmpty a
-prependList = error "prependList todo"
+prependList xs ys =
+  go (reverse xs) ys
+  where
+    go [] ys = ys
+    go (x:xs) (y :| ys) = go xs (x :| (y : ys))
+
+prependList' :: [a] -> NonEmpty a -> NonEmpty a
+prependList' [] ys = ys
+prependList' (x:xs) (y:|ys) =
+  x :| (xs ++ (y:ys))
 
 
 -- vi kan definere partition ved å gjenbruke partition for vanlige lister
@@ -24,7 +33,7 @@ partition p (x:|xs) = L.partition p (x:xs)
 
 -- gi en NonEmpty Int slik at partitionres = ([1,3],[4,2])
 partitionres :: ([Int], [Int])
-partitionres = partition odd (error "partitionres todo")
+partitionres = partition odd (1 :| [3, 4, 2])
 
 -- #partition 2
 -- returtypen til partition ovenfor er lett å bruke, men vi mister litt informasjon
@@ -35,10 +44,17 @@ partitionres = partition odd (error "partitionres todo")
 -- tips : bruk L.partition p xs for å gjøre grovjobben
 -- se også oppgaven under først
 
-type ResType a = () -- TODO
+data ResType a
+  = OnlyMatch (NonEmpty a)
+  | NoMatch (NonEmpty a)
+  | BothMatch (NonEmpty a) (NonEmpty a)
 
 partition' :: (a -> Bool) -> NonEmpty a -> ResType a
-partition' = error "partition' todo"
+partition' f xs =
+  case (partition f xs) of
+    ([], (y:ys)) -> NoMatch (y:|ys)
+    ((x:xs), []) -> OnlyMatch (x:|xs)
+    ((x:xs), (y:ys)) -> BothMatch (x:|xs) (y:|ys)
 
 -- #partition 3
 -- Vi kan tenke at vi vil gå konverte resultatet fra partion' tilbake til en NonEmpty
@@ -54,7 +70,9 @@ toNonEmpty ([], y:ys) = Just $ y :| ys
 toNonEmpty ([], []) = Nothing
 
 toNonEmpty' :: ResType a -> NonEmpty a
-toNonEmpty' = error "toNonEmpty' todo"
+toNonEmpty' (OnlyMatch xs) = xs
+toNonEmpty' (NoMatch ys) = ys
+toNonEmpty' (BothMatch (x:|xs) ys) = prependList (x:xs) ys
 
 ----------------------
 ---TESTS
@@ -70,6 +88,9 @@ testPartitionRes = TestList [TestLabel "partionres" $ TestCase (assertEqual "par
 
 prop_prepend :: [Int] -> NonEmpty Int -> Property  
 prop_prepend xs ys = toList (prependList xs ys) === (xs ++ toList ys)
+
+prop_prepend' :: [Int] -> NonEmpty Int -> Property
+prop_prepend' xs ys = toList (prependList' xs ys) === (xs ++ toList ys)
 
 prop_partition' :: NonEmpty Int -> Property
 prop_partition' xs = lp === Just np 
